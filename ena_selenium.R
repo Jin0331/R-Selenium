@@ -2,7 +2,7 @@ library(RSelenium)
 library(tidyverse)
 
 
-run_id <- read_delim(file = "ena_sra-run_20210705-0207.tsv", delim = "\t", col_names = T) %>% 
+run_id <- read_delim(file = "R-Selenium/ena_sra-run_20210705-0207.tsv", delim = "\t", col_names = T) %>% 
   pull(1)
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 ena_parse <- function(remDr, ena_url, id, sleep_cnt = 3){
@@ -83,7 +83,7 @@ while(cnt <= length(run_id)){
     next
   } else {
     cnt <- cnt + 1
-    Sys.sleep(2)
+    # Sys.sleep(2)
   }
   
   
