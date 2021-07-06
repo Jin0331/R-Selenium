@@ -3,6 +3,15 @@ library(tidyverse)
 library(mongolite)
 
 # function
+collection_to_DF <- function(collection_name, url) {
+  m <- mongo(collection = collection_name, 
+             db = "indication", 
+             url = url,
+             verbose = TRUE, 
+             options = ssl_options())
+  m$find() %>% as_tibble() %>% return()
+}
+
 run_parse <- function(remDr, ena_url, id, collection_name){
   ena_parse <- function(remDr, ena_url, id, sleep_cnt = 2.5){
     
