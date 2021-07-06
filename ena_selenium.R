@@ -11,9 +11,8 @@ collection_to_DF <- function(collection_name, url) {
              options = ssl_options())
   m$find() %>% as_tibble() %>% return()
 }
-
-run_parse <- function(remDr, ena_url, id, collection_name){
-  ena_parse <- function(remDr, ena_url, id, sleep_cnt = 2.5){
+run_parse <- function(remDr, ena_url, id, collection_name, start, end){
+  ena_parse <- function(remDr, ena_url, id, sleep_cnt = 3){
     
     remDr$navigate(paste0(ena_url, id))
     Sys.sleep(sleep_cnt)
@@ -62,13 +61,14 @@ run_parse <- function(remDr, ena_url, id, collection_name){
       return()
   }
   remDr$open() 
-  cnt <- 1
-  while(cnt <= length(run_id)){
+  remDr$navigate("https://www.ebi.ac.uk/ena/browser/home")
+  Sys.sleep(10)
+  cnt <- start
+  while(cnt <= end){
     print(paste0(run_id[cnt], " #", cnt))
     re <- FALSE
     tryCatch(
       expr = {
-        
         m <- mongo(collection = collection_name, 
                      db = "indication", 
                      url = mongoUrl,
@@ -77,7 +77,7 @@ run_parse <- function(remDr, ena_url, id, collection_name){
         df <- bind_cols(tibble(index = cnt, run_accession = run_id[cnt]), 
                        ena_parse(remDr = remDr, 
                                  ena_url = ena_url, id = run_id[cnt]))
-        
+  
         m$insert(df)
         
       },
@@ -90,6 +90,7 @@ run_parse <- function(remDr, ena_url, id, collection_name){
       print(paste0(run_id[cnt], " re-tried"))
       try(remDr$close())
       remDr$open()
+      remDr$navigate(paste0(ena_url, run_id[cnt]))
       Sys.sleep(10)
       
       next
@@ -103,10 +104,11 @@ run_parse <- function(remDr, ena_url, id, collection_name){
 remDr <- remoteDriver(remoteServerAddr = "localhost",
                       port = 4444,   # port 번호 입력
                       browserName = "chrome")  
+
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
 
-run_id <- read_delim(file = "R-Selenium/non_small_cell_lung_cancer.tsv", delim = "\t", col_names = T) %>% pull(1)
+run_id <- read_delim(file = "R-Selenium/nsclc.tsv", delim = "\t", col_names = T) %>% pull(1)
 
 # run selenium
-run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "nsclc")
+run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "nsclc", count = 7267, end = length(run_id))
