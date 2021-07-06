@@ -2,13 +2,6 @@ library(RSelenium)
 library(tidyverse)
 library(mongolite)
 
-mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-pan <- mongo(collection = "pancreatic", 
-             db = "indication", 
-             url = mongoUrl,
-             verbose = TRUE, 
-             options = ssl_options())
-
 # function
 run_parse <- function(remDr, ena_url, id, collection_name){
   ena_parse <- function(remDr, ena_url, id, sleep_cnt = 2.5){
@@ -88,6 +81,7 @@ run_parse <- function(remDr, ena_url, id, collection_name){
       print(paste0(run_id[cnt], " re-tried"))
       try(remDr$close())
       remDr$open()
+      Sys.sleep(10)
       
       next
     } else {
@@ -100,16 +94,10 @@ run_parse <- function(remDr, ena_url, id, collection_name){
 remDr <- remoteDriver(remoteServerAddr = "localhost",
                       port = 4444,   # port 번호 입력
                       browserName = "chrome")  
-run_id <- read_delim(file = "R-Selenium/cololectal.tsv", delim = "\t", col_names = T) %>% pull(1)
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
+mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
 
+run_id <- read_delim(file = "R-Selenium/non_small_cell_lung_cancer.tsv", delim = "\t", col_names = T) %>% pull(1)
 
 # run selenium
-run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "colon")
-
-
-# run
-
-result_list %>% bind_rows() %>% 
-  bind_cols(RUN_ID = run_id, .) %>% 
-  write_delim(file = "pancreatic_ena_list.txt", delim = "\t")
+run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "nsclc")
