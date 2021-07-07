@@ -20,7 +20,7 @@ collection_to_DF <- function(collection_name, url) {
              options = ssl_options())
   m$find() %>% as_tibble() %>% return()
 }
-ena_parse <- function(remDr, ena_url, id, sleep_cnt = 4){
+ena_parse <- function(remDr, ena_url, id, sleep_cnt = 7){
   
   remDr$navigate(paste0(ena_url, id))
   Sys.sleep(sleep_cnt)
@@ -111,15 +111,14 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
 }
 
 # variable
-cores <- 15
+cores <- 20
 cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-run_id <- read_delim(file = "R-Selenium/head_and_neck.tsv", delim = "\t", col_names = T) %>% pull(1)
+run_id <- read_delim(file = "R-Selenium/nsclc.tsv", delim = "\t", col_names = T) %>% pull(1)
 
 # STAR_END
-
 start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
 
 # Cluster define
@@ -131,7 +130,7 @@ clusterEvalQ(cl, {
   library(mongolite)
 })
 
-
+# run selenium
 parLapply(cl = cl,
           X = start_end_list,
           fun = function(se_list) {
@@ -139,8 +138,6 @@ parLapply(cl = cl,
             print(se_list)
             remDr <- remoteDriver(remoteServerAddr = "localhost",
                                   port = 4444)
-            run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "head_neck", start =  se_list[1], end = se_list[2])
+            run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "NSCLC", start =  se_list[1], end = se_list[2])
           })
-
-# run selenium
 
