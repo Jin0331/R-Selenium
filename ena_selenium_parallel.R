@@ -140,4 +140,4 @@ parLapply(cl = cl,
                                   port = 4444)
             run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "NSCLC", start =  se_list[1], end = se_list[2])
           })
-
+stopCluster(cl)
