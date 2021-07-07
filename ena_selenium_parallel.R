@@ -107,10 +107,11 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
       cnt <- cnt + 1
     }
   }
+  remDr$close()
 }
 
 # variable
-cores <- 15
+cores <- 20
 cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
@@ -134,7 +135,6 @@ clusterEvalQ(cl, {
 parLapply(cl = cl,
           X = start_end_list,
           fun = function(se_list) {
-            
             print(se_list)
             remDr_ <- remoteDriver(remoteServerAddr = "localhost",
                                   port = 4444)
