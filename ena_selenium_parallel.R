@@ -14,7 +14,7 @@ min_max_chunk <- function(ena_list, C){
 }
 collection_to_DF <- function(collection_name, url) {
   m <- mongo(collection = collection_name, 
-             db = "indication", 
+             db = "indication_list", 
              url = url,
              verbose = TRUE, 
              options = ssl_options())
@@ -116,7 +116,7 @@ cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-run_id <- read_delim(file = "R-Selenium/nsclc.tsv", delim = "\t", col_names = T) %>% pull(1)
+run_id <- collection_to_DF(collection_name = "HNSC", url = mongoUrl) %>% pull(1)
 
 # STAR_END
 start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
