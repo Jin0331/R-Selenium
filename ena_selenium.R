@@ -102,13 +102,12 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
 
 # Selenium server
 remDr <- remoteDriver(remoteServerAddr = "localhost",
-                      port = 4444,   # port 번호 입력
-                      browserName = "chrome")  
+                      port = 4444)  
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
 
-run_id <- read_delim(file = "R-Selenium/nsclc.tsv", delim = "\t", col_names = T) %>% pull(1)
+run_id <- read_delim(file = "R-Selenium/head_and_neck.tsv", delim = "\t", col_names = T) %>% pull(1)
 
 # run selenium
-run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "nsclc", count = 7267, end = length(run_id))
+run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "HNSC", start = 1, end = length(run_id))
