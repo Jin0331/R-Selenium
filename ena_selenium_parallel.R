@@ -3,22 +3,15 @@ library(tidyverse)
 library(parallel)
 library(mongolite)
 
-# variable
-cores <- 4
-cl <- makeCluster(cores)
-
-ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
-mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-run_id <- read_delim(file = "R-Selenium/head_and_neck.tsv", delim = "\t", col_names = T) %>% pull(1)
-
-# STAR_END
-session_1 = c(1,10)
-session_2 = c(11,20)
-session_3 = c(21,30)
-
-start_end_list <- list(session_1, session_2, session_3)
-
 # function
+min_max_chunk <- function(ena_list, C){
+  chunk <- function(x, n) split(x, sort(rank(x) %% n))
+  
+  ena_list <- 1:ena_list
+  chunk(ena_list, C) %>% lapply(X = ., function(value){
+    return(c(min(value), max(value)))
+  }) %>% unname() %>% return()
+}
 collection_to_DF <- function(collection_name, url) {
   m <- mongo(collection = collection_name, 
              db = "indication", 
@@ -116,6 +109,18 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
   }
   try(remDr$close())
 }
+
+# variable
+cores <- 15
+cl <- makeCluster(cores)
+
+ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
+mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
+run_id <- read_delim(file = "R-Selenium/head_and_neck.tsv", delim = "\t", col_names = T) %>% pull(1)
+
+# STAR_END
+
+start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
 
 # Cluster define
 clusterExport(cl, varlist=c("start_end_list", "ena_parse", "run_parse", "ena_url", "mongoUrl", "run_id"), envir=environment())
