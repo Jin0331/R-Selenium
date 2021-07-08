@@ -173,7 +173,7 @@ cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-collection_name <- "COAD"
+collection_name <- "PAAD"
 run_id <- collection_to_DF(collection_name = collection_name, url = mongoUrl) %>% pull(1)
 
 # STAR_END
