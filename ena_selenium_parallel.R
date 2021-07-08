@@ -20,13 +20,26 @@ collection_to_DF <- function(collection_name, url) {
              options = ssl_options())
   m$find() %>% as_tibble() %>% return()
 }
+collection_to_DF_context <- function(collection_name, url) {
+  m <- mongo(collection = collection_name, 
+             db = "indication", 
+             url = url,
+             verbose = TRUE, 
+             options = ssl_options())
+  m$find() %>% as_tibble() %>% return()
+}
 run_parse <- function(remDr, ena_url, id, collection_name, start, end){
   ena_parse <- function(remDr, ena_url, id, sleep_cnt = 10){
     
     remDr$navigate(paste0(ena_url, id))
     Sys.sleep(sleep_cnt)
     
-    # tryCatch()
+    
+    remDr$findElement(using = "xpath", "//div[contains(text(),'Base')]/../div[2]")
+    
+    
+    
+    
     title <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
     title <- title$getElementText() %>% unlist()
     
@@ -48,14 +61,22 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
     base_count <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[6]/div[2]/span')
     base_count <- base_count$getElementText() %>% unlist()
     
-    library_layout <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[8]/div[2]')
-    library_layout <- library_layout$getElementText() %>% unlist()
-    
-    library_strategy <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[9]/div[2]/span')
-    library_strategy <- library_strategy$getElementText() %>% unlist()
-    
-    library_source <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[10]/div[2]')
-    library_source <- library_source$getElementText() %>% unlist()
+    if(str_detect(string = base_count, pattern = "[a-zA-Z]")){
+      read_count <- " "
+      base_count <- " "
+      library_layout <- " "
+      library_strategy <- " "
+      library_source <- " "
+    } else {
+      library_layout <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[8]/div[2]')
+      library_layout <- library_layout$getElementText() %>% unlist()
+      
+      library_strategy <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[9]/div[2]/span')
+      library_strategy <- library_strategy$getElementText() %>% unlist()
+      
+      library_source <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[10]/div[2]')
+      library_source <- library_source$getElementText() %>% unlist()
+    }
     
     tibble(title = title,
            study_accession = study_accession, 
@@ -116,7 +137,7 @@ cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-collection_name <- "HNSC"
+collection_name <- "COAD"
 run_id <- collection_to_DF(collection_name = collection_name, url = mongoUrl) %>% pull(1)
 
 # STAR_END
@@ -137,7 +158,7 @@ parLapply(cl = cl,
           fun = function(se_list) {
             print(se_list)
             remDr_ <- remoteDriver(remoteServerAddr = "localhost",
-                                  port = 4444)
+                                   port = 4444)
             run_parse(remDr = remDr_, ena_url = ena_url, 
                       id = run_id, collection_name = collection_name,
                       start =  se_list[1], end = se_list[2])

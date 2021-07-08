@@ -17,36 +17,84 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
     remDr$navigate(paste0(ena_url, id))
     Sys.sleep(sleep_cnt)
     
-    # tryCatch()
     title <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
     title <- title$getElementText() %>% unlist()
     
     study_accession <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[4]/div/div[2]/app-read-file-links/div/div[3]/table/tbody/tr/td[1]/div/span/a')
     study_accession <- study_accession$getElementText() %>% unlist()
     
-    organism <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[1]/div[2]/a')
-    organism <- organism$getElementText() %>% unlist()
     
-    sample_accession <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[2]/div[2]/span')
-    sample_accession <- sample_accession$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        organism <- remDr$findElement(using = "xpath", "//div[contains(text(),'Organism')]/../div[2]")
+        organism <- organism$getElementText() %>% unlist()
+      },
+      error = function(e){
+        organism <<- " "
+      })
     
-    instrument_model <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[4]/div[2]/span')
-    instrument_model <- instrument_model$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        sample_accession <- remDr$findElement(using = "xpath", "//div[contains(text(),'Sample Accession')]/../div[2]")
+        sample_accession <- sample_accession$getElementText() %>% unlist()
+      },
+      error = function(e){
+        sample_accession <<- " "
+      })
     
-    read_count <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[5]/div[2]/span')
-    read_count <- read_count$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        instrument_model <- remDr$findElement(using = "xpath", "//div[contains(text(),'Instrument Model')]/../div[2]")
+        instrument_model <- instrument_model$getElementText() %>% unlist()
+      },
+      error = function(e){
+        instrument_model <<- " "
+      })
     
-    base_count <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[6]/div[2]/span')
-    base_count <- base_count$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        read_count <- remDr$findElement(using = "xpath", "//div[contains(text(),'Read')]/../div[2]")
+        read_count <- read_count$getElementText() %>% unlist()
+      },
+      error = function(e){
+        read_count <<- " "
+      })
     
-    library_layout <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[8]/div[2]')
-    library_layout <- library_layout$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        base_count <- remDr$findElement(using = "xpath", "//div[contains(text(),'Base')]/../div[2]")
+        base_count <- base_count$getElementText() %>% unlist()
+      },
+      error = function(e){
+        base_count <<- " "
+      })
     
-    library_strategy <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[9]/div[2]/span')
-    library_strategy <- library_strategy$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        library_layout <- remDr$findElement(using = "xpath", "//div[contains(text(),'Library Layout')]/../div[2]")
+        library_layout <- library_layout$getElementText() %>% unlist()
+      },
+      error = function(e){
+        library_layout <<- " "
+      })
     
-    library_source <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[3]/div[10]/div[2]')
-    library_source <- library_source$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        library_strategy <- remDr$findElement(using = "xpath", "//div[contains(text(),'Library Strategy')]/../div[2]")
+        library_strategy <- library_strategy$getElementText() %>% unlist()
+      },
+      error = function(e){
+        library_strategy <<- " "
+      })
+
+    tryCatch(
+      expr = {
+        library_source <- remDr$findElement(using = "xpath", "//div[contains(text(),'Library Source')]/../div[2]")
+        library_source <- library_source$getElementText() %>% unlist()
+      },
+      error = function(e){
+        library_source <<- " "
+      })
     
     tibble(title = title,
            study_accession = study_accession, 
@@ -102,12 +150,13 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
 
 # Selenium server
 remDr <- remoteDriver(remoteServerAddr = "localhost",
-                      port = 4444)  
+                      port = 4444,
+                      browser = "chrome")  
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
 
-run_id <- read_delim(file = "R-Selenium/head_and_neck.tsv", delim = "\t", col_names = T) %>% pull(1)
+run_id <- read_delim(file = "colon1.tsv", delim = "\t", col_names = T) %>% pull(1)
 
 # run selenium
-run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "HNSC", start = 1, end = length(run_id))
+run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "test", start = 1, end = length(run_id))
