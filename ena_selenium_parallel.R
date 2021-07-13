@@ -12,24 +12,24 @@ min_max_chunk <- function(ena_list, C){
     return(c(min(value), max(value)))
   }) %>% unname() %>% return()
 }
-collection_to_DF <- function(collection_name, url) {
+collection_to_DF <- function(db, collection_name, url) {
   m <- mongo(collection = collection_name, 
-             db = "indication_list", 
+             db = db, 
              url = url,
              verbose = TRUE, 
              options = ssl_options())
   m$find() %>% as_tibble() %>% return()
 }
-collection_to_DF_context <- function(collection_name, url) {
+collection_to_DF_context <- function(db, collection_name, url) {
   m <- mongo(collection = collection_name, 
-             db = "indication", 
+             db = db, 
              url = url,
              verbose = TRUE, 
              options = ssl_options())
   m$find() %>% as_tibble() %>% return()
 }
-run_parse <- function(remDr, ena_url, id, collection_name, start, end){
-  ena_parse <- function(remDr, ena_url, id, sleep_cnt = 8){
+run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
+  ena_parse <- function(remDr, ena_url, id, sleep_cnt = 11){
     
     remDr$navigate(paste0(ena_url, id))
     Sys.sleep(sleep_cnt)
@@ -136,7 +136,7 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
     tryCatch(
       expr = {
         m <- mongo(collection = collection_name, 
-                   db = "indication", 
+                   db = db, 
                    url = mongoUrl,
                    verbose = TRUE, 
                    options = ssl_options())
@@ -173,8 +173,10 @@ cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-collection_name <- "PAAD"
-run_id <- collection_to_DF(collection_name = collection_name, url = mongoUrl) %>% pull(1)
+db_list <- "cellline_list"
+db_save <- "cellline"
+collection_name <- "22RV1"
+run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>% pull(1)
 
 # STAR_END
 start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
@@ -196,7 +198,7 @@ parLapply(cl = cl,
             remDr_ <- remoteDriver(remoteServerAddr = "localhost",
                                    port = 4444)
             run_parse(remDr = remDr_, ena_url = ena_url, 
-                      id = run_id, collection_name = collection_name,
+                      id = run_id, db = db_save, collection_name = collection_name,
                       start =  se_list[1], end = se_list[2])
           })
 stopCluster(cl)
