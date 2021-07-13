@@ -125,8 +125,18 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
         library_source <<- " "
       })
     
+    tryCatch(
+      expr = {
+        remDr$navigate(paste0(ena_url, str_trim(study_accession)))
+        Sys.sleep(5)
+        study_description <- remDr$findElement(using = "xpath", "//div[contains(@class, 'record-description')]")
+        study_description <- study_description$getElementText() %>% unlist()
+      }
+    )
+    
     tibble(title = title,
            study_accession = study_accession, 
+           study_description = study_description,
            organism = organism, 
            sample_accession = sample_accession,
            instrument_model = instrument_model, 

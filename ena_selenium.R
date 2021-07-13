@@ -150,8 +150,7 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
 
 # Selenium server
 remDr <- remoteDriver(remoteServerAddr = "localhost",
-                      port = 4444,
-                      browser = "chrome")  
+                      port = 4444)  
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
