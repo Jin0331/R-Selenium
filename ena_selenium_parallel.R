@@ -184,9 +184,11 @@ ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
 db_list <- "cellline_list"
 db_save <- "cellline"
-# collection_name <- "22RV1"
-col_list <- collection_list(db = "cellline_list", url = mongoUrl)
 
+# setdiff 
+col_list <- collection_list(db = "cellline_list", url = mongoUrl)
+exist_list <- collection_list(db = "cellline", url = mongoUrl)
+col_list <- setdiff(col_list, exist_list)
 
 for(collection_name in col_list){
   # variable
