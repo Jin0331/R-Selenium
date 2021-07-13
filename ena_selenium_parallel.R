@@ -29,7 +29,7 @@ collection_to_DF_context <- function(db, collection_name, url) {
   m$find() %>% as_tibble() %>% return()
 }
 run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
-  ena_parse <- function(remDr, ena_url, id, sleep_cnt = 11){
+  ena_parse <- function(remDr, ena_url, id, sleep_cnt = 8){
     
     remDr$navigate(paste0(ena_url, id))
     Sys.sleep(sleep_cnt)
@@ -168,7 +168,7 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
 }
 
 # variable
-cores <- 2
+cores <- 20
 cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
@@ -192,6 +192,7 @@ clusterEvalQ(cl, {
 })
 
 # run selenium
+print(collection_name)
 parLapply(cl = cl,
           X = start_end_list,
           fun = function(se_list) {
@@ -202,4 +203,6 @@ parLapply(cl = cl,
                       id = run_id, db = db_save, collection_name = collection_name,
                       start =  se_list[1], end = se_list[2])
           })
+
+
 stopCluster(cl)
