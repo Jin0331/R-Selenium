@@ -222,7 +222,5 @@ for(collection_name in col_list){
                         id = run_id, db = db_save, collection_name = collection_name,
                         start =  se_list[1], end = se_list[2])
             })
-  
-  
   stopCluster(cl)
 }
