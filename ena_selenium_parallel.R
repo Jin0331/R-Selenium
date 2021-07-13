@@ -168,7 +168,7 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
 }
 
 # variable
-cores <- 20
+cores <- 2
 cl <- makeCluster(cores)
 
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
@@ -182,7 +182,8 @@ run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url 
 start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
 
 # Cluster define
-clusterExport(cl, varlist=c("collection_name", "start_end_list", "run_parse", "ena_url", "mongoUrl", "run_id"), envir=environment())
+clusterExport(cl, varlist=c("collection_name", "start_end_list", "run_parse", "ena_url", "mongoUrl", "run_id",
+                            "db_list", "db_save"), envir=environment())
 clusterEvalQ(cl, {
   library(RSelenium)
   library(tidyverse)
