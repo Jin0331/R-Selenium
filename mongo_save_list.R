@@ -16,3 +16,4 @@ m <- mongo(collection = collection_name,
            verbose = TRUE, 
            options = ssl_options())
 m$insert(ena_list)
+

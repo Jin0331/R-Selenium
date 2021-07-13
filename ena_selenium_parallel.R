@@ -12,6 +12,18 @@ min_max_chunk <- function(ena_list, C){
     return(c(min(value), max(value)))
   }) %>% unname() %>% return()
 }
+collection_list <- function(db, url){
+  m <- mongo(db = db, 
+             url = mongoUrl,
+             verbose = TRUE, 
+             options = ssl_options())
+  
+  mongo_list <- m$run('{"listCollections":1}')
+  mongo_list <- mongo_list$cursor$firstBatch$name
+  
+  return(mongo_list)
+}
+collection_list(db = "cellline_list", url = mongoUrl)
 collection_to_DF <- function(db, collection_name, url) {
   m <- mongo(collection = collection_name, 
              db = db, 
@@ -168,41 +180,47 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
 }
 
 # variable
-cores <- 20
-cl <- makeCluster(cores)
-
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
 db_list <- "cellline_list"
 db_save <- "cellline"
-collection_name <- "22RV1"
-run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>% pull(1)
-
-# STAR_END
-start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
-
-# Cluster define
-clusterExport(cl, varlist=c("collection_name", "start_end_list", "run_parse", "ena_url", "mongoUrl", "run_id",
-                            "db_list", "db_save"), envir=environment())
-clusterEvalQ(cl, {
-  library(RSelenium)
-  library(tidyverse)
-  library(parallel)
-  library(mongolite)
-})
-
-# run selenium
-print(collection_name)
-parLapply(cl = cl,
-          X = start_end_list,
-          fun = function(se_list) {
-            print(se_list)
-            remDr_ <- remoteDriver(remoteServerAddr = "localhost",
-                                   port = 4444)
-            run_parse(remDr = remDr_, ena_url = ena_url, 
-                      id = run_id, db = db_save, collection_name = collection_name,
-                      start =  se_list[1], end = se_list[2])
-          })
+# collection_name <- "22RV1"
+col_list <- collection_list(db = "cellline_list", url = mongoUrl)
 
 
-stopCluster(cl)
+for(collection_name in col_list){
+  # variable
+  cores <- 20
+  cl <- makeCluster(cores)
+  
+  run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>% pull(1)
+  
+  # STAR_END
+  start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
+  
+  # Cluster define
+  clusterExport(cl, varlist=c("collection_name", "start_end_list", "run_parse", "ena_url", "mongoUrl", "run_id",
+                              "db_list", "db_save"), envir=environment())
+  clusterEvalQ(cl, {
+    library(RSelenium)
+    library(tidyverse)
+    library(parallel)
+    library(mongolite)
+  })
+  
+  # run selenium
+  print(collection_name)
+  parLapply(cl = cl,
+            X = start_end_list,
+            fun = function(se_list) {
+              print(se_list)
+              remDr_ <- remoteDriver(remoteServerAddr = "localhost",
+                                     port = 4444)
+              run_parse(remDr = remDr_, ena_url = ena_url, 
+                        id = run_id, db = db_save, collection_name = collection_name,
+                        start =  se_list[1], end = se_list[2])
+            })
+  
+  
+  stopCluster(cl)
+}
