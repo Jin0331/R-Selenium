@@ -128,7 +128,7 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
     tryCatch(
       expr = {
         remDr$navigate(paste0(ena_url, str_trim(study_accession)))
-        Sys.sleep(5)
+        Sys.sleep(4)
         study_description <- remDr$findElement(using = "xpath", "//div[contains(@class, 'record-description')]")
         study_description <- study_description$getElementText() %>% unlist()
       },
