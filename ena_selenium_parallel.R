@@ -131,8 +131,10 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
         Sys.sleep(5)
         study_description <- remDr$findElement(using = "xpath", "//div[contains(@class, 'record-description')]")
         study_description <- study_description$getElementText() %>% unlist()
-      }
-    )
+      },
+      error = function(e){
+        study_description <<- " "
+      })
     
     tibble(title = title,
            study_accession = study_accession, 
