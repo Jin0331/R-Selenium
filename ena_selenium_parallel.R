@@ -204,7 +204,7 @@ col_list <- collection_list(db = db_list, url = mongoUrl)
 exist_list <- collection_list(db = db_save, url = mongoUrl)
 col_list <- setdiff(col_list, exist_list) %>% sort()
 
-for(collection_name in col_list[3:length(col_list)]){
+for(collection_name in col_list){
   # variable
   cores <- 15
   cl <- makeCluster(cores)
