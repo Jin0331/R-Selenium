@@ -194,17 +194,19 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
 # variable
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
+# db_list <- "indication_list"
+# db_save <- "indication"
 db_list <- "cellline_list"
 db_save <- "cellline"
 
 # setdiff 
-col_list <- collection_list(db = "cellline_list", url = mongoUrl)
-exist_list <- collection_list(db = "cellline", url = mongoUrl)
-col_list <- setdiff(col_list, exist_list)
+col_list <- collection_list(db = db_list, url = mongoUrl)
+exist_list <- collection_list(db = db_save, url = mongoUrl)
+col_list <- setdiff(col_list, exist_list) %>% sort()
 
-for(collection_name in col_list){
+for(collection_name in col_list[3:length(col_list)]){
   # variable
-  cores <- 20
+  cores <- 15
   cl <- makeCluster(cores)
   
   run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>% pull(1)
@@ -235,4 +237,5 @@ for(collection_name in col_list){
                         start =  se_list[1], end = se_list[2])
             })
   stopCluster(cl)
+  print("Done!!")
 }
