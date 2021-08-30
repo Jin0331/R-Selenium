@@ -23,7 +23,7 @@ collection_list <- function(db, url){
   
   return(mongo_list)
 }
-collection_list(db = "cellline_list", url = mongoUrl)
+# collection_list(db = "cellline_list", url = mongoUrl)
 collection_to_DF <- function(db, collection_name, url) {
   m <- mongo(collection = collection_name, 
              db = db, 
@@ -125,10 +125,11 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
         library_source <<- " "
       })
     
+    # to Study description
+    remDr$navigate(paste0(ena_url, str_trim(study_accession), "?show=xrefs"))
+    Sys.sleep(4)
     tryCatch(
       expr = {
-        remDr$navigate(paste0(ena_url, str_trim(study_accession)))
-        Sys.sleep(4)
         study_description <- remDr$findElement(using = "xpath", "//div[contains(@class, 'record-description')]")
         study_description <- study_description$getElementText() %>% unlist()
       },
@@ -136,9 +137,55 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
         study_description <<- " "
       })
     
+    # to Study Center Name
+    tryCatch(
+      expr = {
+        study_center_name <- remDr$findElement(using = "xpath", "//div[contains(text(),'Center Name')]/../div[2]")
+        study_center_name <- study_center_name$getElementText() %>% unlist()
+      },
+      error = function(e){
+        study_center_name <<- " "
+      })
+    
+    # to Study Public
+    tryCatch(
+      expr = {
+        Pubmed <- remDr$findElement(using = "xpath", "//li[contains(text(),'PubMed')]/div[1]")
+        Pubmed <- Pubmed$getElementText() %>% unlist() %>% str_remove_all(pattern = "\\(Click here to see all ENA records for this PubMed ID\\)") %>% 
+          strsplit(split = ",") %>% unlist() %>% 
+          lapply(X = ., FUN = function(value){
+            str_extract_all(value, pattern = "[:alnum:]") %>% 
+              unlist() %>% 
+              paste0(collapse = "") %>% return()}) %>% 
+          paste(collapse = ",") 
+      },
+      error = function(e){
+        Pubmed <<- " "
+      })
+    
+    tryCatch(
+      expr = {
+        EuropePMC <- remDr$findElement(using = "xpath", "//li[contains(text(),'EuropePMC')]/div[1]")
+        EuropePMC <- EuropePMC$getElementText() %>% unlist() %>% str_remove_all(pattern = "\\(Click here to see all ENA records for this EuropePMC ID\\)") %>% 
+          strsplit(split = ",") %>% unlist() %>% 
+          lapply(X = ., FUN = function(value){
+            str_extract_all(value, pattern = "[:alnum:]") %>% 
+              unlist() %>% 
+              paste0(collapse = "") %>% return()}) %>% 
+          paste(collapse = ",") 
+      },
+      error = function(e){
+        EuropePMC <<- " "
+      })
+    
+    
+    
     tibble(title = title,
            study_accession = study_accession, 
            study_description = study_description,
+           study_center_name = study_center_name,
+           Pubmed = Pubmed,
+           EuropePMC = EuropePMC, 
            organism = organism, 
            sample_accession = sample_accession,
            instrument_model = instrument_model, 
@@ -194,10 +241,10 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
 # variable
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-# db_list <- "indication_list"
-# db_save <- "indication"
-db_list <- "cellline_list"
-db_save <- "cellline"
+db_list <- "indication_list"
+db_save <- "indication_center_name_paper"
+# db_list <- "cellline_list"
+# db_save <- "cellline"
 
 # setdiff 
 col_list <- collection_list(db = db_list, url = mongoUrl)
@@ -206,7 +253,7 @@ col_list <- setdiff(col_list, exist_list) %>% sort()
 
 for(collection_name in col_list){
   # variable
-  cores <- 15
+  cores <- 20
   cl <- makeCluster(cores)
   
   run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>% pull(1)
