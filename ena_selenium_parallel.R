@@ -125,11 +125,12 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
         library_source <<- " "
       })
     
-    # to Study description
-    remDr$navigate(paste0(ena_url, str_trim(study_accession), "?show=xrefs"))
-    Sys.sleep(4)
+
     tryCatch(
       expr = {
+        # to Study description
+        remDr$navigate(paste0(ena_url, str_trim(study_accession), "?show=xrefs"))
+        Sys.sleep(4)
         study_description <- remDr$findElement(using = "xpath", "//div[contains(@class, 'record-description')]")
         study_description <- study_description$getElementText() %>% unlist()
       },
@@ -253,7 +254,7 @@ col_list <- setdiff(col_list, exist_list) %>% sort()
 
 for(collection_name in col_list){
   # variable
-  cores <- 20
+  cores <- 25
   cl <- makeCluster(cores)
   
   run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>% pull(1)
