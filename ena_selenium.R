@@ -20,8 +20,27 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
     title <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
     title <- title$getElementText() %>% unlist()
     
-    study_accession <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[4]/div/div[2]/app-read-file-links/div/div[3]/table/tbody/tr/td[1]/div/span/a')
-    study_accession <- study_accession$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        study_accession <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[4]/div/div[2]/app-read-file-links/div/div[3]/table/tbody/tr/td[1]/div/span/a')
+        study_accession <- study_accession$getElementText() %>% unlist()
+      },
+      error = function(e){
+        tibble(title = title,
+               study_accession = " ", 
+               organism = " ", 
+               sample_accession = " ",
+               instrument_model = " ", 
+               read_count = " ", 
+               base_count = " ", 
+               library_layout = " ",
+               library_strategy = " ", 
+               library_source = " ") %>% 
+          return()
+      }
+    )
+    
+
     
     
     tryCatch(

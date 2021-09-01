@@ -49,10 +49,17 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
     title <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
     title <- title$getElementText() %>% unlist()
     
-    study_accession <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[4]/div/div[2]/app-read-file-links/div/div[3]/table/tbody/tr/td[1]/div/span/a')
-    study_accession <- study_accession$getElementText() %>% unlist()
+    # error check
+    tryCatch(
+      expr = {
+        study_accession <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[4]/div/div[2]/app-read-file-links/div/div[3]/table/tbody/tr/td[1]/div/span/a')
+        study_accession <- study_accession$getElementText() %>% unlist()
+      },
+      error = function(e){
+        study_accession <<- " "
+      })
     
-    
+    # find element
     tryCatch(
       expr = {
         organism <- remDr$findElement(using = "xpath", "//div[contains(text(),'Organism')]/../div[2]")
@@ -130,7 +137,7 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
       expr = {
         # to Study description
         remDr$navigate(paste0(ena_url, str_trim(study_accession), "?show=xrefs"))
-        Sys.sleep(4)
+        Sys.sleep(5)
         study_description <- remDr$findElement(using = "xpath", "//div[contains(@class, 'record-description')]")
         study_description <- study_description$getElementText() %>% unlist()
       },
@@ -179,8 +186,7 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
         EuropePMC <<- " "
       })
     
-    
-    
+    # return DF
     tibble(title = title,
            study_accession = study_accession, 
            study_description = study_description,
