@@ -1,12 +1,12 @@
 library(tidyverse)
 library(mongolite)
 
-db <- "cellline_list"
+db <- "indication_list"
 
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
-ena_list <- read_delim(file = "COLO205_1.tsv", delim = "\t", col_names = T) %>%
-  bind_rows(., read_delim(file = "COLO205_2.tsv", delim = "\t", col_names = T)) %>%
-  bind_rows(., read_delim(file = "COLO205_3.tsv", delim = "\t", col_names = T)) %>%
+ena_list <- read_delim(file = "lung_1.tsv", delim = "\t", col_names = T) %>%
+  bind_rows(., read_delim(file = "lung_2.tsv", delim = "\t", col_names = T)) %>%
+  bind_rows(., read_delim(file = "lung_3.tsv", delim = "\t", col_names = T)) %>%
   # bind_rows(., read_delim(file = "MiaPaca2_4.tsv", delim = "\t", col_names = T)) %>%
   # bind_rows(., read_delim(file = "MiaPaca2_5.tsv", delim = "\t", col_names = T)) %>%
   # bind_rows(., read_delim(file = "MiaPaca2_6.tsv", delim = "\t", col_names = T)) %>%
@@ -16,7 +16,7 @@ ena_list <- read_delim(file = "COLO205_1.tsv", delim = "\t", col_names = T) %>%
 
 
 
-collection_name <- "COLO205"
+collection_name <- "LUNG"
 m <- mongo(collection = collection_name, 
            db = db, 
            url = mongoUrl,
