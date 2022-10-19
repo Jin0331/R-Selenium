@@ -17,8 +17,17 @@ run_parse <- function(remDr, ena_url, id, collection_name, start, end){
     remDr$navigate(paste0(ena_url, id))
     Sys.sleep(sleep_cnt)
     
-    title <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
-    title <- title$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        title <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
+        title <- title$getElementText() %>% unlist()
+      },
+      error = function(e){
+        title <<- " "
+      }
+    )
+    
+
     
     tryCatch(
       expr = {
@@ -174,7 +183,8 @@ remDr <- remoteDriver(remoteServerAddr = "localhost",
 ena_url <- "https://www.ebi.ac.uk/ena/browser/view/"
 mongoUrl <- "mongodb://root:sempre813!@192.168.0.91:27017/admin"
 
-run_id <- read_delim(file = "colon1.tsv", delim = "\t", col_names = T) %>% pull(1)
+# run_id <- read_delim(file = "colon1.tsv", delim = "\t", col_names = T) %>% pull(1)
+run_id <- 'SRR14580535'
 
 # run selenium
 run_parse(remDr = remDr, ena_url = ena_url, id = run_id, collection_name = "test", start = 1, end = length(run_id))

@@ -3,6 +3,9 @@ library(tidyverse)
 library(parallel)
 library(mongolite)
 
+# selenium
+# xvfb-run java -Dwebdriver.chrome.driver=/usr/bin/chromedriver -jar selenium-server-standalone-3.141.59.jar 
+
 # function
 min_max_chunk <- function(ena_list, C){
   chunk <- function(x, n) split(x, sort(rank(x) %% n))
@@ -40,14 +43,37 @@ collection_to_DF_context <- function(db, collection_name, url) {
              options = ssl_options())
   m$find() %>% as_tibble() %>% return()
 }
+run_id_setdiff <- function(run_id, db, collection_name, url){
+  DF <- collection_to_DF_context(db = db, collection_name = collection_name, url = mongoUrl)  
+  if(nrow(DF) == 0){
+    setdiff(run_id, NULL) %>% 
+      sort() %>% 
+      return()
+  } else {
+    DF %>% 
+      pull(run_accession) %>% 
+      setdiff(run_id, .) %>% 
+      sort() %>% 
+      return()
+  }
+  
+    
+}
 run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
   ena_parse <- function(remDr, ena_url, id, sleep_cnt = 8){
     
     remDr$navigate(paste0(ena_url, id))
     Sys.sleep(sleep_cnt)
     
-    title <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
-    title <- title$getElementText() %>% unlist()
+    tryCatch(
+      expr = {
+        title_ <- remDr$findElement(using = "xpath", '//*[@id="view-content-col"]/div[2]')
+        title_ <- title_$getElementText() %>% unlist()
+      },
+      error = function(e){
+        title_ <<- " "
+      }
+    )
     
     # error check
     tryCatch(
@@ -187,7 +213,7 @@ run_parse <- function(remDr, ena_url, id, db, collection_name, start, end){
       })
     
     # return DF
-    tibble(title = title,
+    tibble(title = title_,
            study_accession = study_accession, 
            study_description = study_description,
            study_center_name = study_center_name,
@@ -260,10 +286,16 @@ col_list <- setdiff(col_list, exist_list) %>% sort()
 
 for(collection_name in col_list){
   # variable
-  cores <- 25
+  cores <- 13
   cl <- makeCluster(cores)
   
-  run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>% pull(1)
+  run_id <- collection_to_DF(db = db_list, collection_name = collection_name, url = mongoUrl) %>%
+    pull(1) %>% 
+    run_id_setdiff(run_id = ., db = db_save, collection_name = collection_name, url = mongoUrl)
+  
+  if(length(run_id) == 0){
+    next
+  }
   
   # STAR_END
   start_end_list <- min_max_chunk(ena_list = length(run_id), cores)
